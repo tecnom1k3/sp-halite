@@ -1,0 +1,13 @@
+{
+    "name": "technomike/halite",
+    "description": "Sitepoint tutorial for Halite",
+    "authors": [
+        {
+            "name": "Miguel Ibarra",
+            "email": "miguel@digitec.ws"
+        }
+    ],
+    "require": {
+        "silex/silex": "^1.3"
+    }
+}
