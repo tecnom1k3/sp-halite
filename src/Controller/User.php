@@ -9,9 +9,6 @@ class User
 {
     public function getList(Request $request, Application $app)
     {
-        $app['user.service'] = $app->share(function($app) {
-             return new UserService;
-        });
        
         $arrUsers = $app['user.service']->getList();
         return $app->json($arrUsers);
