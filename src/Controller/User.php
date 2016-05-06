@@ -2,22 +2,18 @@
 namespace Acme\Controller;
 
 use Silex\Application;
-use Silex\ControllerProviderInterface;
 use Acme\Service\User as UserService;
+use Symfony\Component\HttpFoundation\Request;
 
-class User implements ControllerProviderInterface
+class User
 {
-    public function connect(Application $app)
+    public function getList(Request $request, Application $app)
     {
         $app['user.service'] = $app->share(function($app) {
              return new UserService;
         });
-        $controllers = $app['controllers_factory'];
-        $controllers->get('/', function (Application $app) {
-            $arrUsers = $app['user.service']->getList();
-            return $app->json($arrUsers);
-        });
-
-        return $controllers;
+       
+        $arrUsers = $app['user.service']->getList();
+        return $app->json($arrUsers);
     }
 }
