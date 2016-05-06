@@ -3,11 +3,10 @@ chdir(dirname(__DIR__));
 require_once('vendor/autoload.php');
 
 use Silex\Application;
+use Acme\Controller\User as UserController;
 
 $app = new Application;
 
-$app->get('/', function() use ($app){
-	return 'hello world';
-});
+$app->mount('/users', new UserController);
 
 $app->run();
