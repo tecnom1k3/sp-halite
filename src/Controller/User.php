@@ -7,10 +7,17 @@ use Symfony\Component\HttpFoundation\Request;
 
 class User
 {
+    private $service;
+
+    public function __construct(UserService $service)
+    {
+        $this->service = $service;
+    }
+
     public function getList(Request $request, Application $app)
     {
        
-        $arrUsers = $app['user.service']->getList();
+        $arrUsers = $this->service->getList();
         return $app->json($arrUsers);
     }
 }
