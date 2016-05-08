@@ -3,11 +3,15 @@ namespace Acme\Service;
 
 class User
 {
+    private $db;
+
+    public function __construct($db)
+    {
+        $this->db = $db;
+    }
     public function getList()
     {
-        return [
-            ['id' => '1', 'name' => 'John Doe'],
-            ['id' => '2', 'name' => 'Jane Smith'],
-        ];
+	$rs = $this->db->fetchAll('select id, name from users');
+	return $rs;
     }
 }

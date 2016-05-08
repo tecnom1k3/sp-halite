@@ -10,8 +10,8 @@ class User implements ControllerProviderInterface
 {
     public function connect(Application $app)
     {
-        $app['service.user'] = $app->share(function($app) {
-             return new UserService;
+        $app['service.user'] = $app->share(function() use ($app) {
+             return new UserService($app['db']);
         });
 
         $app['controller.user'] = $app->share(function() use ($app) {
