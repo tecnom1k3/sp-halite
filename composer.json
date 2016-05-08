@@ -9,7 +9,8 @@
     ],
     "require": {
         "silex/silex": "^1.3",
-        "doctrine/dbal": "~2.2"
+        "doctrine/dbal": "~2.2",
+        "vlucas/phpdotenv": "^2.2"
     },
     "autoload": {
         "psr-4": {"Acme\\": "src/"}
