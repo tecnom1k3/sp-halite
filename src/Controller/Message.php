@@ -19,4 +19,12 @@ class Message
         $arrMessages = $this->service->getList($userId);
         return $app->json($arrMessages);
     }
+ 
+    public function save($userId, Request $request, Application $app)
+    {
+	$parameters = json_decode($request->getContent(), true);
+
+        $lastInsertId = $this->service->save($parameters['from'], $userId, $parameters['subject'], $parameters['message']);
+	return $app->json(['messageId' => $lastInsertId]);
+    }
 }

@@ -31,7 +31,7 @@ class User implements ControllerProviderInterface
         $controllers = $app['controllers_factory'];
         $controllers->get('/', 'controller.user:getList');
 	$controllers->get('/{userId}/messages', 'controller.message:getList');
-
+	$controllers->post('/{userId}/messages', 'controller.message:save');
         return $controllers;
     }
 }
