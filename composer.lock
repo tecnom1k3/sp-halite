@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "709fdba05c87fac913652e4d524b70c8",
-    "content-hash": "2642adaf0fce02236a7cde31993f5b93",
+    "hash": "089f99a1565a3fbdbe7ec966d7e17d5e",
+    "content-hash": "c9e73d50e42f05f849aaa852726a83d4",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -475,6 +475,42 @@
                 "parser"
             ],
             "time": "2014-09-09 13:34:57"
+        },
+        {
+            "name": "paragonie/halite",
+            "version": "0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/paragonie/halite.git",
+                "reference": "4f7699685c0a63dbb5975848c67e0bcf0d8e0b79"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/paragonie/halite/zipball/4f7699685c0a63dbb5975848c67e0bcf0d8e0b79",
+                "reference": "4f7699685c0a63dbb5975848c67e0bcf0d8e0b79",
+                "shasum": ""
+            },
+            "require": {
+                "ext-libsodium": "^1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ParagonIE\\Halite\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL3"
+            ],
+            "authors": [
+                {
+                    "name": "Paragon Initiative Enterprises",
+                    "email": "info@paragonie.com"
+                }
+            ],
+            "description": "High-level cryptography interface powered by libsodium",
+            "time": "2015-10-08 20:48:53"
         },
         {
             "name": "pimple/pimple",

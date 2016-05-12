@@ -14,4 +14,11 @@ class User
 	$rs = $this->db->fetchAll('select id, name from users');
 	return $rs;
     }
+
+    public function getSalt($userId)
+    {
+        $sql = 'SELECT salt FROM users where id = ?;';
+        $rs = $this->db->fetchAssoc($sql, [$userId]);
+        return $rs['salt'];   
+    }
 }
