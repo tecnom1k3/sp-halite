@@ -6,9 +6,13 @@ use Acme\Controller\User as UserController;
 use Acme\Service\Message as MessageService;
 use Acme\Service\User as UserService;
 use Silex\Application;
-use Silex\ControllerProviderInterface;
 use Silex\ControllerCollection;
+use Silex\ControllerProviderInterface;
 
+/**
+ * Class User
+ * @package Acme\Provider
+ */
 class User implements ControllerProviderInterface
 {
     /**
@@ -35,9 +39,9 @@ class User implements ControllerProviderInterface
 
         /** @var ControllerCollection $controllers */
         $controllers = $app['controllers_factory'];
-        $controllers->get('/',                              'controller.user:getList');
-        $controllers->get('/{userId}/messages',             'controller.message:getList');
-        $controllers->post('/{userId}/messages',            'controller.message:save');
+        $controllers->get('/', 'controller.user:getList');
+        $controllers->get('/{userId}/messages', 'controller.message:getList');
+        $controllers->post('/{userId}/messages', 'controller.message:save');
         $controllers->get('/{userId}/messages/{messageId}', 'controller.message:get');
         return $controllers;
     }

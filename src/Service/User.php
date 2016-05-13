@@ -3,6 +3,10 @@ namespace Acme\Service;
 
 use Doctrine\DBAL\Connection;
 
+/**
+ * Class User
+ * @package Acme\Service
+ */
 class User
 {
     /**
