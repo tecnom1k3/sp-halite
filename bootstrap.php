@@ -1,11 +1,12 @@
 <?php
 require_once('vendor/autoload.php');
 
-use Silex\Application;
-use Silex\Provider\ServiceControllerServiceProvider;
 use Acme\Provider\User as UserProvider;
-use Silex\Provider\DoctrineServiceProvider;
 use Dotenv\Dotenv;
+use Silex\Application;
+use Silex\Provider\DoctrineServiceProvider;
+use Silex\Provider\ServiceControllerServiceProvider;
+use Acme\Service\Halite;
 
 $dotenv = new Dotenv(__DIR__);
 $dotenv->load();
@@ -21,11 +22,15 @@ $app->register(new DoctrineServiceProvider, [
     'db.options' => [
         'driver' => 'pdo_mysql',
         'host' => getenv('DB_HOST'),
-	'dbname' => getenv('DB_DATABASE'),
-	'user' => getenv('DB_USER'),
-	'password' => getenv('DB_PASS'),
+        'dbname' => getenv('DB_DATABASE'),
+        'user' => getenv('DB_USER'),
+        'password' => getenv('DB_PASS'),
     ]
 ]);
+
+$app['service.halite'] = $app->share(function () use ($app) {
+    return new Halite;
+});
 
 $app->mount('/users', new UserProvider);
 
