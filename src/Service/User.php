@@ -1,7 +1,8 @@
 <?php
 namespace Acme\Service;
 
-use Doctrine\DBAL\Connection;
+use Acme\Model\User as UserModel;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class User
@@ -9,18 +10,27 @@ use Doctrine\DBAL\Connection;
  */
 class User
 {
+
     /**
-     * @var Connection
+     * @var EntityManager
      */
-    private $db;
+    private $em;
 
     /**
      * User constructor.
-     * @param Connection $db
+     * @param EntityManager $em
      */
-    public function __construct(Connection $db)
+    public function __construct(EntityManager $em)
     {
-        $this->db = $db;
+        $this->setEm($em);
+    }
+
+    /**
+     * @param EntityManager $em
+     */
+    public function setEm(EntityManager $em)
+    {
+        $this->em = $em;
     }
 
     /**
@@ -28,8 +38,21 @@ class User
      */
     public function getList()
     {
-        $rs = $this->db->fetchAll('select id, name from users');
-        return $rs;
+        $userRepository = $this->em->getRepository('Acme\Model\User');
+
+        $result = $userRepository->findAll();
+
+        $arrUsers = [];
+
+        /** @var UserModel $record */
+        foreach ($result as $record) {
+            array_push($arrUsers, [
+                'id' => $record->getId(),
+                'name' => $record->getName(),
+            ]);
+        }
+
+        return $arrUsers;
     }
 
     /**
@@ -39,7 +62,7 @@ class User
     public function getSalt($userId)
     {
         $sql = 'SELECT salt FROM users where id = ?;';
-        $rs = $this->db->fetchAssoc($sql, [$userId]);
+        $rs = $this->em->getConnection()->fetchAssoc($sql, [$userId]);
         return $rs['salt'];
     }
 }

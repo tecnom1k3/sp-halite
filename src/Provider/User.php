@@ -22,7 +22,7 @@ class User implements ControllerProviderInterface
     public function connect(Application $app)
     {
         $app['service.user'] = $app->share(function () use ($app) {
-            return new UserService($app['db']);
+            return new UserService($app['doctrine.entityManager']);
         });
 
         $app['service.message'] = $app->share(function () use ($app) {
