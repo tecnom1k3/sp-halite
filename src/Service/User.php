@@ -3,6 +3,7 @@ namespace Acme\Service;
 
 use Acme\Model\User as UserModel;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
 
 /**
  * Class User
@@ -38,7 +39,7 @@ class User
      */
     public function getList()
     {
-        $userRepository = $this->em->getRepository('Acme\Model\User');
+        $userRepository = $this->getUserRepository();
 
         $result = $userRepository->findAll();
 
@@ -61,8 +62,22 @@ class User
      */
     public function getSalt($userId)
     {
-        $sql = 'SELECT salt FROM users where id = ?;';
-        $rs = $this->em->getConnection()->fetchAssoc($sql, [$userId]);
-        return $rs['salt'];
+        $userRepository = $this->getUserRepository();
+        /** @var UserModel $rs */
+        $userModel = $userRepository->find($userId);
+
+        if ($userModel instanceof UserModel) {
+            return $userModel->getSalt();
+        }
+
+        throw new \InvalidArgumentException('User not found');
+    }
+
+    /**
+     * @return EntityRepository
+     */
+    protected function getUserRepository()
+    {
+        return $this->em->getRepository('Acme\Model\User');
     }
 }
