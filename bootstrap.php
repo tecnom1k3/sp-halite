@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Dotenv\Dotenv;
 use Silex\Application;
-use Silex\Provider\DoctrineServiceProvider;
 use Silex\Provider\ServiceControllerServiceProvider;
 
 $dotenv = new Dotenv(__DIR__);
@@ -28,10 +27,6 @@ $app = new Application;
 $app['debug'] = true;
 
 $app->register(new ServiceControllerServiceProvider);
-
-$app->register(new DoctrineServiceProvider, [
-    'db.options' => $dbOptions
-]);
 
 $app['service.halite'] = $app->share(function () use ($app) {
     return new Halite;

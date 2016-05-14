@@ -26,7 +26,7 @@ class User implements ControllerProviderInterface
         });
 
         $app['service.message'] = $app->share(function () use ($app) {
-            return new MessageService($app['db'], $app['service.user'], $app['service.halite']);
+            return new MessageService($app['doctrine.entityManager'], $app['service.user'], $app['service.halite']);
         });
 
         $app['controller.user'] = $app->share(function () use ($app) {

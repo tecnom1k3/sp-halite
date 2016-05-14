@@ -28,10 +28,12 @@ class User
 
     /**
      * @param EntityManager $em
+     * @return $this
      */
     public function setEm(EntityManager $em)
     {
         $this->em = $em;
+        return $this;
     }
 
     /**
@@ -57,8 +59,17 @@ class User
     }
 
     /**
+     * @return EntityRepository
+     */
+    protected function getUserRepository()
+    {
+        return $this->em->getRepository('Acme\Model\User');
+    }
+
+    /**
      * @param $userId
-     * @return mixed
+     * @return string
+     * @throws \InvalidArgumentException
      */
     public function getSalt($userId)
     {
@@ -71,13 +82,5 @@ class User
         }
 
         throw new \InvalidArgumentException('User not found');
-    }
-
-    /**
-     * @return EntityRepository
-     */
-    protected function getUserRepository()
-    {
-        return $this->em->getRepository('Acme\Model\User');
     }
 }

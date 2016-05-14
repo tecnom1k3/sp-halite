@@ -10,7 +10,7 @@ class User
     /**
      * @var int
      * @Id
-     * @Column(type="integer") 
+     * @Column(type="integer")
      * @GeneratedValue
      */
     protected $id;
