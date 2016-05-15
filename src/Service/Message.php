@@ -99,12 +99,13 @@ class Message
     {
         if (($user = $this->userService->findById($userId)) == true) {
             $messageList = $this->getMessageRepository()->getList($user->getId());
-            $encryptionKeySubject = $this->deriveCipherKeyFromSalt($user->getSalt(), self::TARGET_DERIVE_SUBJECT);
+            $salt = $user->getSalt();
             $arrResults = [];
 
             foreach ($messageList as $message) {
-                $plainSubject = $this->haliteService->decrypt($message['subject'],
-                    $encryptionKeySubject);
+                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($salt,
+                    self::TARGET_DERIVE_SUBJECT . $message['id']);
+                $plainSubject = $this->haliteService->decrypt($message['subject'], $encryptionKeySubject);
                 $message['subject'] = $plainSubject;
                 array_push($arrResults, $message);
             }
@@ -152,8 +153,10 @@ class Message
                 $toUserSalt = $toUser->getSalt();
                 $fromUser = $message->getFromUser();
 
-                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($toUserSalt, self::TARGET_DERIVE_SUBJECT);
-                $encryptionKeyMessage = $this->deriveCipherKeyFromSalt($toUserSalt, self::TARGET_DERIVE_MESSAGE);
+                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($toUserSalt,
+                    self::TARGET_DERIVE_SUBJECT . $message->getId());
+                $encryptionKeyMessage = $this->deriveCipherKeyFromSalt($toUserSalt,
+                    self::TARGET_DERIVE_MESSAGE . $message->getId());
 
                 $authenticationKey = $this->deriveAuthenticationKeyFromSalt($fromUser->getSalt());
 
@@ -208,10 +211,22 @@ class Message
         if (($fromUserModel = $this->userService->findById($from)) == true) {
             /** @var UserModel $toUserModel */
             if (($toUserModel = $this->userService->findById($to)) == true) {
+
+                /*
+                 * create a placeholder for data
+                 */
+                $messageModel->setFromUser($fromUserModel)
+                    ->setToUser($toUserModel);
+
+                $this->em->persist($messageModel);
+                $this->em->flush();
+
                 $toUserSalt = $toUserModel->getSalt();
 
-                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($toUserSalt, self::TARGET_DERIVE_SUBJECT);
-                $encryptionKeyMessage = $this->deriveCipherKeyFromSalt($toUserSalt, self::TARGET_DERIVE_MESSAGE);
+                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($toUserSalt,
+                    self::TARGET_DERIVE_SUBJECT . $messageModel->getId());
+                $encryptionKeyMessage = $this->deriveCipherKeyFromSalt($toUserSalt,
+                    self::TARGET_DERIVE_MESSAGE . $messageModel->getId());
 
                 $cipherSubject = $this->haliteService->encrypt($subject, $encryptionKeySubject);
                 $cipherMessage = $this->haliteService->encrypt($message, $encryptionKeyMessage);
@@ -220,9 +235,7 @@ class Message
 
                 $mac = $this->haliteService->authenticate($cipherMessage, $authenticationKey);
 
-                $messageModel->setFromUser($fromUserModel)
-                    ->setToUser($toUserModel)
-                    ->setSubject($cipherSubject)
+                $messageModel->setSubject($cipherSubject)
                     ->setMessage($cipherMessage)
                     ->setMac($mac);
 
