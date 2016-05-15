@@ -4,6 +4,7 @@ namespace Acme\Service;
 use ParagonIE\Halite\Alerts\InvalidMessage;
 use ParagonIE\Halite\Alerts\InvalidSalt;
 use ParagonIE\Halite\KeyFactory;
+use ParagonIE\Halite\Symmetric\AuthenticationKey;
 use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\Halite\Symmetric\EncryptionKey;
 
@@ -25,6 +26,16 @@ class Halite
     }
 
     /**
+     * @param string $password
+     * @return AuthenticationKey
+     * @throws InvalidSalt
+     */
+    public function deriveAuthenticationKey($password)
+    {
+        return KeyFactory::deriveAuthenticationKey($password, base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
+    }
+
+    /**
      * @param $cipherText
      * @param EncryptionKey $key
      * @return string
@@ -43,5 +54,26 @@ class Halite
     public function encrypt($plainText, EncryptionKey $key)
     {
         return Crypto::encrypt($plainText, $key, true);
+    }
+
+    /**
+     * @param $message
+     * @param AuthenticationKey $authenticationKey
+     * @return string
+     */
+    public function authenticate($message, AuthenticationKey $authenticationKey)
+    {
+        return Crypto::authenticate($message, $authenticationKey, true);
+    }
+
+    /**
+     * @param $message
+     * @param AuthenticationKey $authenticationKey
+     * @param $mac
+     * @return bool
+     */
+    public function verify($message, AuthenticationKey $authenticationKey, $mac)
+    {
+        return Crypto::verify($message, $authenticationKey, $mac, true);
     }
 }

@@ -42,6 +42,28 @@ class Message
      * @Column(type="blob")
      */
     protected $message;
+    
+    /**
+     * @var string
+     * @Column(type="blob")
+     */
+    protected $mac;
+
+    /**
+     * @return resource
+     */
+    public function getMac()
+    {
+        return $this->mac;
+    }
+
+    /**
+     * @param string $mac
+     */
+    public function setMac($mac)
+    {
+        $this->mac = $mac;
+    }
 
     /**
      * @return int
@@ -98,7 +120,7 @@ class Message
     }
 
     /**
-     * @return string
+     * @return resource
      */
     public function getSubject()
     {
@@ -116,7 +138,7 @@ class Message
     }
 
     /**
-     * @return string
+     * @return resource
      */
     public function getMessage()
     {

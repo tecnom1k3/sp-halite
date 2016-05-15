@@ -83,4 +83,13 @@ class User
 
         throw new \InvalidArgumentException('User not found');
     }
+
+    /**
+     * @param $userId
+     * @return null|UserModel
+     */
+    public function findById($userId)
+    {
+        return $this->getUserRepository()->find($userId);
+    }
 }
