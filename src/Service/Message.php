@@ -3,9 +3,11 @@ namespace Acme\Service;
 
 use Acme\Model\Message as MessageModel;
 use Acme\Model\Repository\Message as MessageRepository;
+use Acme\Model\User as UserModel;
 use Acme\Service\Halite as HaliteService;
 use Acme\Service\User as UserService;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
 use ParagonIE\Halite\Symmetric\EncryptionKey;
 
 /**
@@ -23,6 +25,16 @@ class Message
      * Derivation constant for message encryption
      */
     const TARGET_DERIVE_MESSAGE = 'message';
+
+    /**
+     * Message model
+     */
+    const REPOSITORY_MESSAGE = 'Acme\Model\Message';
+
+    /**
+     * User model
+     */
+    const REPOSITORY_USER = 'Acme\Model\User';
 
     /**
      * @var UserService
@@ -105,6 +117,23 @@ class Message
     }
 
     /**
+     * @return MessageRepository
+     */
+    protected function getMessageRepository()
+    {
+        return $this->getRepository(self::REPOSITORY_MESSAGE);
+    }
+
+    /**
+     * @param $repository
+     * @return EntityRepository
+     */
+    protected function getRepository($repository)
+    {
+        return $this->em->getRepository($repository);
+    }
+
+    /**
      * @param $userId
      * @param string $target
      * @return EncryptionKey
@@ -172,16 +201,42 @@ class Message
         $cipherSubject = $this->haliteService->encrypt($subject, $encryptionKeySubject);
         $cipherMessage = $this->haliteService->encrypt($message, $encryptionKeyMessage);
 
-        $this->em->getConnection()->insert('messages',
-            ['users_id' => $to, 'fromUserId' => $from, 'subject' => $cipherSubject, 'message' => $cipherMessage]);
-        return $this->em->getConnection()->lastInsertId();
+        $messageModel = $this->getNewMessageModel();
+        $fromUserRepository = $this->getUserRepository();
+        $toUserRepository = clone $fromUserRepository;
+
+        /** @var UserModel $fromUserModel */
+        if (($fromUserModel = $fromUserRepository->find($from)) == true) {
+            /** @var UserModel $toUserModel */
+            if (($toUserModel = $toUserRepository->find($to)) == true) {
+                $messageModel->setFromUser($fromUserModel)
+                    ->setToUser($toUserModel)
+                    ->setSubject($cipherSubject)
+                    ->setMessage($cipherMessage);
+
+                $this->em->persist($messageModel);
+                $this->em->flush();
+
+                return $messageModel->getId();
+            }
+        }
+
+        throw new \InvalidArgumentException('From or to user does not exist');
     }
 
     /**
-     * @return MessageRepository
+     * @return MessageModel
      */
-    protected function getMessageRepository()
+    protected function getNewMessageModel()
     {
-        return $this->em->getRepository('Acme\Model\Message');
+        return new MessageModel;
+    }
+
+    /**
+     * @return EntityRepository
+     */
+    protected function getUserRepository()
+    {
+        return $this->getRepository(self::REPOSITORY_USER);
     }
 }

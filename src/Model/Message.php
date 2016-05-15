@@ -52,11 +52,13 @@ class Message
     }
 
     /**
-     * @param int $id
+     * @param $id
+     * @return $this
      */
     public function setId($id)
     {
         $this->id = $id;
+        return $this;
     }
 
     /**
@@ -69,10 +71,12 @@ class Message
 
     /**
      * @param UserModel $toUser
+     * @return $this
      */
     public function setToUser(UserModel $toUser)
     {
         $this->toUser = $toUser;
+        return $this;
     }
 
     /**
@@ -85,10 +89,12 @@ class Message
 
     /**
      * @param UserModel $fromUser
+     * @return $this
      */
     public function setFromUser(UserModel $fromUser)
     {
         $this->fromUser = $fromUser;
+        return $this;
     }
 
     /**
@@ -101,10 +107,12 @@ class Message
 
     /**
      * @param string $subject
+     * @return $this
      */
     public function setSubject($subject)
     {
         $this->subject = $subject;
+        return $this;
     }
 
     /**
@@ -117,9 +125,11 @@ class Message
 
     /**
      * @param string $message
+     * @return $this
      */
     public function setMessage($message)
     {
         $this->message = $message;
+        return $this;
     }
 }
