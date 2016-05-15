@@ -33,24 +33,24 @@ class Message
 
     /**
      * @var string
-     * @Column(type="blob")
+     * @Column(type="string")
      */
     protected $subject;
 
     /**
      * @var string
-     * @Column(type="blob")
+     * @Column(type="string")
      */
     protected $message;
     
     /**
      * @var string
-     * @Column(type="blob")
+     * @Column(type="string")
      */
     protected $mac;
 
     /**
-     * @return resource
+     * @return string
      */
     public function getMac()
     {
@@ -120,7 +120,7 @@ class Message
     }
 
     /**
-     * @return resource
+     * @return string
      */
     public function getSubject()
     {
@@ -138,7 +138,7 @@ class Message
     }
 
     /**
-     * @return resource
+     * @return string
      */
     public function getMessage()
     {

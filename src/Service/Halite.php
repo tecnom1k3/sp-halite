@@ -43,7 +43,7 @@ class Halite
      */
     public function decrypt($cipherText, EncryptionKey $key)
     {
-        return Crypto::decrypt($cipherText, $key, true);
+        return Crypto::decrypt(base64_decode($cipherText), $key, true);
     }
 
     /**
@@ -53,27 +53,27 @@ class Halite
      */
     public function encrypt($plainText, EncryptionKey $key)
     {
-        return Crypto::encrypt($plainText, $key, true);
+        return base64_encode(Crypto::encrypt($plainText, $key, true));
     }
 
     /**
-     * @param $message
+     * @param string $message
      * @param AuthenticationKey $authenticationKey
      * @return string
      */
     public function authenticate($message, AuthenticationKey $authenticationKey)
     {
-        return Crypto::authenticate($message, $authenticationKey, true);
+        return base64_encode(Crypto::authenticate(base64_decode($message), $authenticationKey, true));
     }
 
     /**
-     * @param $message
+     * @param string $message
      * @param AuthenticationKey $authenticationKey
-     * @param $mac
+     * @param string $mac
      * @return bool
      */
     public function verify($message, AuthenticationKey $authenticationKey, $mac)
     {
-        return Crypto::verify($message, $authenticationKey, $mac, true);
+        return Crypto::verify(base64_decode($message), $authenticationKey, base64_decode($mac), true);
     }
 }

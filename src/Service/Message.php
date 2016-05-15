@@ -103,7 +103,7 @@ class Message
             $arrResults = [];
 
             foreach ($messageList as $message) {
-                $plainSubject = $this->haliteService->decrypt(stream_get_contents($message['subject']),
+                $plainSubject = $this->haliteService->decrypt($message['subject'],
                     $encryptionKeySubject);
                 $message['subject'] = $plainSubject;
                 array_push($arrResults, $message);
@@ -157,13 +157,17 @@ class Message
 
                 $authenticationKey = $this->deriveAuthenticationKeyFromSalt($fromUser->getSalt());
 
-                $plainSubject = $this->haliteService->decrypt(stream_get_contents($message->getSubject()),
+                $plainSubject = $this->haliteService->decrypt($message->getSubject(),
                     $encryptionKeySubject);
-                $plainMessage = $this->haliteService->decrypt(stream_get_contents($message->getMessage()),
-                    $encryptionKeyMessage);
 
-                $messageAuthenticated = $this->haliteService->verify(stream_get_contents($message->getMessage()),
-                    $authenticationKey, stream_get_contents($message->getMac()));
+                $messageAuthenticated = $this->haliteService->verify($message->getMessage(), $authenticationKey,
+                    $message->getMac());
+
+                $plainMessage = '';
+
+                if ($messageAuthenticated) {
+                    $plainMessage = $this->haliteService->decrypt($message->getMessage(), $encryptionKeyMessage);
+                }
 
                 return [
                     'id' => $message->getId(),

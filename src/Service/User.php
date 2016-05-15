@@ -65,25 +65,7 @@ class User
     {
         return $this->em->getRepository('Acme\Model\User');
     }
-
-    /**
-     * @param $userId
-     * @return string
-     * @throws \InvalidArgumentException
-     */
-    public function getSalt($userId)
-    {
-        $userRepository = $this->getUserRepository();
-        /** @var UserModel $rs */
-        $userModel = $userRepository->find($userId);
-
-        if ($userModel instanceof UserModel) {
-            return $userModel->getSalt();
-        }
-
-        throw new \InvalidArgumentException('User not found');
-    }
-
+    
     /**
      * @param $userId
      * @return null|UserModel
