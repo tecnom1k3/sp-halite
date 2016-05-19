@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "cd10cc4ad5cfee1698aa1fafb423c5e3",
-    "content-hash": "ce1d195d471fc48dbce7b5fa8b3d3242",
+    "hash": "7aa0506016a25d7d25233f14808226ca",
+    "content-hash": "982f069bef1a892b6f61a12ea9dadc98",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -608,16 +608,16 @@
         },
         {
             "name": "paragonie/halite",
-            "version": "v2.1.0",
+            "version": "v2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/halite.git",
-                "reference": "ac89eee5e20295a3c7ed39a021132022f4863e0b"
+                "reference": "b0040cd67915397740bc07161b2c66599b8b1b12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/halite/zipball/ac89eee5e20295a3c7ed39a021132022f4863e0b",
-                "reference": "ac89eee5e20295a3c7ed39a021132022f4863e0b",
+                "url": "https://api.github.com/repos/paragonie/halite/zipball/b0040cd67915397740bc07161b2c66599b8b1b12",
+                "reference": "b0040cd67915397740bc07161b2c66599b8b1b12",
                 "shasum": ""
             },
             "require": {
@@ -641,7 +641,7 @@
                 }
             ],
             "description": "High-level cryptography interface powered by libsodium",
-            "time": "2016-05-07 21:31:27"
+            "time": "2016-05-15 07:41:00"
         },
         {
             "name": "pimple/pimple",
@@ -1118,16 +1118,16 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.1.1",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "1289d16209491b584839022f29257ad859b8532d"
+                "reference": "dff51f72b0706335131b00a7f49606168c582594"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/1289d16209491b584839022f29257ad859b8532d",
-                "reference": "1289d16209491b584839022f29257ad859b8532d",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/dff51f72b0706335131b00a7f49606168c582594",
+                "reference": "dff51f72b0706335131b00a7f49606168c582594",
                 "shasum": ""
             },
             "require": {
@@ -1139,7 +1139,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.1-dev"
+                    "dev-master": "1.2-dev"
                 }
             },
             "autoload": {
@@ -1173,7 +1173,7 @@
                 "portable",
                 "shim"
             ],
-            "time": "2016-01-20 09:13:37"
+            "time": "2016-05-18 14:26:46"
         },
         {
             "name": "symfony/routing",
