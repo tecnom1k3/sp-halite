@@ -7,7 +7,10 @@ use Acme\Model\User as UserModel;
 use Acme\Service\Halite as HaliteService;
 use Acme\Service\User as UserService;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
+use ParagonIE\Halite\KeyFactory;
 use ParagonIE\Halite\Symmetric\AuthenticationKey;
+use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\Halite\Symmetric\EncryptionKey;
 
 /**
@@ -205,15 +208,24 @@ class Message
      */
     public function save($from, $to, $subject, $message)
     {
-        $messageModel = $this->getNewMessageModel();
+        /*
+         * create a new model object to hold the message
+         */
+        $messageModel = new MessageModel;
 
+        /** @var EntityRepository $userRepository */
+        $userRepository = $this->em->getRepository('Acme\Model\User');
+
+        /*
+         * search for the sender and recipient users
+         */
         /** @var UserModel $fromUserModel */
-        if (($fromUserModel = $this->userService->findById($from)) == true) {
+        if (($fromUserModel = $userRepository->find($from)) == true) {
             /** @var UserModel $toUserModel */
-            if (($toUserModel = $this->userService->findById($to)) == true) {
+            if (($toUserModel = $userRepository->find($to)) == true) {
 
                 /*
-                 * create a placeholder for data
+                 * create a placeholder for data, in order to generate a message id, used later to encrypt data.
                  */
                 $messageModel->setFromUser($fromUserModel)
                     ->setToUser($toUserModel);
@@ -221,23 +233,40 @@ class Message
                 $this->em->persist($messageModel);
                 $this->em->flush();
 
+                /*
+                 * Retrieve the salts for both the sender and the recipient
+                 */
                 $toUserSalt = $toUserModel->getSalt();
+                $fromUserSalt = $fromUserModel->getSalt();
 
-                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($toUserSalt,
-                    self::TARGET_DERIVE_SUBJECT . $messageModel->getId());
-                $encryptionKeyMessage = $this->deriveCipherKeyFromSalt($toUserSalt,
-                    self::TARGET_DERIVE_MESSAGE . $messageModel->getId());
+                /*
+                 * create encryption keys concatenating user's salt, a string representing the target field to be
+                 * encrypted, the message unique id, and a system wide salt.
+                 */
+                $encryptionKeySubject = KeyFactory::deriveEncryptionKey(
+                    base64_decode($toUserSalt) . 'subject' . $messageModel->getId(),
+                    base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
+                $encryptionKeyMessage = KeyFactory::deriveEncryptionKey(
+                    base64_decode($toUserSalt) . 'message' . $messageModel->getId(),
+                    base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
 
-                $cipherSubject = $this->haliteService->encrypt($subject, $encryptionKeySubject);
-                $cipherMessage = $this->haliteService->encrypt($message, $encryptionKeyMessage);
+                /*
+                 * encrypt the subject and the message, each with their own encryption key
+                 */
+                $cipherSubject = Crypto::encrypt($subject, $encryptionKeySubject, true);
+                $cipherMessage = Crypto::encrypt($message, $encryptionKeyMessage, true);
 
-                $authenticationKey = $this->deriveAuthenticationKeyFromSalt($fromUserModel->getSalt());
+                /*
+                 * create an authentication key based on the sender's salt and the system wide salt.
+                 */
+                $authenticationKey = KeyFactory::deriveAuthenticationKey(
+                    base64_decode($fromUserSalt), base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
 
-                $mac = $this->haliteService->authenticate($cipherMessage, $authenticationKey);
+                $mac = Crypto::authenticate($cipherMessage, $authenticationKey, true);
 
-                $messageModel->setSubject($cipherSubject)
-                    ->setMessage($cipherMessage)
-                    ->setMac($mac);
+                $messageModel->setSubject(base64_encode($cipherSubject))
+                    ->setMessage(base64_encode($cipherMessage))
+                    ->setMac(base64_encode($mac));
 
                 $this->em->persist($messageModel);
                 $this->em->flush();
@@ -247,13 +276,5 @@ class Message
         }
 
         throw new \InvalidArgumentException('From or to user does not exist');
-    }
-
-    /**
-     * @return MessageModel
-     */
-    protected function getNewMessageModel()
-    {
-        return new MessageModel;
     }
 }

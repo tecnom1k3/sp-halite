@@ -72,6 +72,6 @@ class User
      */
     public function findById($userId)
     {
-        return $this->getUserRepository()->find($userId);
+        return $this->em->getRepository('Acme\Model\User')->find($userId);
     }
 }
