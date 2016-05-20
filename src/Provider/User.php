@@ -36,7 +36,7 @@ class User implements ControllerProviderInterface
          * Requires the doctrine entity manager, the user service, and the halite service
          */
         $app['service.message'] = $app->share(function () use ($app) {
-            return new MessageService($app['doctrine.entityManager'], $app['service.user'], $app['service.halite']);
+            return new MessageService($app['doctrine.entityManager'], $app['service.user']);
         });
 
         /*

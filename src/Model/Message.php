@@ -42,28 +42,6 @@ class Message
      * @Column(type="string")
      */
     protected $message;
-    
-    /**
-     * @var string
-     * @Column(type="string")
-     */
-    protected $mac;
-
-    /**
-     * @return string
-     */
-    public function getMac()
-    {
-        return $this->mac;
-    }
-
-    /**
-     * @param string $mac
-     */
-    public function setMac($mac)
-    {
-        $this->mac = $mac;
-    }
 
     /**
      * @return int

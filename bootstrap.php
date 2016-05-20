@@ -2,7 +2,6 @@
 require_once('vendor/autoload.php');
 
 use Acme\Provider\User as UserProvider;
-use Acme\Service\Halite;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -28,9 +27,6 @@ $app['debug'] = true;
 
 $app->register(new ServiceControllerServiceProvider);
 
-$app['service.halite'] = $app->share(function () use ($app) {
-    return new Halite;
-});
 
 $app['doctrine.entityManager'] = $app->share(function () use ($dbOptions) {
     $paths = ['src/Model'];

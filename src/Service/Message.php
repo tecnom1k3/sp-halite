@@ -4,14 +4,11 @@ namespace Acme\Service;
 use Acme\Model\Message as MessageModel;
 use Acme\Model\Repository\Message as MessageRepository;
 use Acme\Model\User as UserModel;
-use Acme\Service\Halite as HaliteService;
 use Acme\Service\User as UserService;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use ParagonIE\Halite\KeyFactory;
-use ParagonIE\Halite\Symmetric\AuthenticationKey;
 use ParagonIE\Halite\Symmetric\Crypto;
-use ParagonIE\Halite\Symmetric\EncryptionKey;
 
 /**
  * Class Message
@@ -20,29 +17,10 @@ use ParagonIE\Halite\Symmetric\EncryptionKey;
 class Message
 {
     /**
-     * Derivation constant for subject encryption
-     */
-    const TARGET_DERIVE_SUBJECT = 'subject';
-
-    /**
-     * Derivation constant for message encryption
-     */
-    const TARGET_DERIVE_MESSAGE = 'message';
-
-    /**
-     * Message model
-     */
-    const REPOSITORY_MESSAGE = 'Acme\Model\Message';
-
-    /**
      * @var UserService
      */
     private $userService;
 
-    /**
-     * @var HaliteService
-     */
-    private $haliteService;
 
     /**
      * @var EntityManager
@@ -53,12 +31,10 @@ class Message
      * Message constructor.
      * @param EntityManager $entityManager
      * @param User $userService
-     * @param Halite $halite
      */
-    public function __construct(EntityManager $entityManager, UserService $userService, HaliteService $halite)
+    public function __construct(EntityManager $entityManager, UserService $userService)
     {
         $this->setUserService($userService)
-            ->setHaliteService($halite)
             ->setEm($entityManager);
     }
 
@@ -73,15 +49,6 @@ class Message
         return $this;
     }
 
-    /**
-     * @param Halite $haliteService
-     * @return $this
-     */
-    public function setHaliteService(HaliteService $haliteService)
-    {
-        $this->haliteService = $haliteService;
-        return $this;
-    }
 
     /**
      * @param User $userService
@@ -101,14 +68,14 @@ class Message
     public function getList($userId)
     {
         if (($user = $this->userService->findById($userId)) == true) {
-            $messageList = $this->getMessageRepository()->getList($user->getId());
+            $messageList = $this->em->getRepository('Acme\Model\Message')->getList($user->getId());
             $salt = $user->getSalt();
             $arrResults = [];
 
             foreach ($messageList as $message) {
-                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($salt,
-                    self::TARGET_DERIVE_SUBJECT . $message['id']);
-                $plainSubject = $this->haliteService->decrypt($message['subject'], $encryptionKeySubject);
+                $encryptionKeySubject = KeyFactory::deriveEncryptionKey(base64_decode($salt) . 'subject' . $message['id'],
+                    base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
+                $plainSubject = Crypto::decrypt(base64_decode($message['subject']), $encryptionKeySubject, true);
                 $message['subject'] = $plainSubject;
                 array_push($arrResults, $message);
             }
@@ -119,24 +86,6 @@ class Message
     }
 
     /**
-     * @return MessageRepository
-     */
-    protected function getMessageRepository()
-    {
-        return $this->em->getRepository(self::REPOSITORY_MESSAGE);
-    }
-
-    /**
-     * @param $salt
-     * @param string $target
-     * @return EncryptionKey
-     */
-    protected function deriveCipherKeyFromSalt($salt, $target = null)
-    {
-        return $this->haliteService->deriveKey(base64_decode($salt) . $target);
-    }
-
-    /**
      * @param $userId
      * @param $messageId
      * @return array
@@ -144,7 +93,8 @@ class Message
      */
     public function get($userId, $messageId)
     {
-        $repository = $this->getMessageRepository();
+        /** @var MessageRepository $repository */
+        $repository = $this->em->getRepository('Acme\Model\Message');
         /** @var MessageModel $message */
         if (($message = $repository->find($messageId)) == true) {
             $toUser = $message->getToUser();
@@ -156,46 +106,27 @@ class Message
                 $toUserSalt = $toUser->getSalt();
                 $fromUser = $message->getFromUser();
 
-                $encryptionKeySubject = $this->deriveCipherKeyFromSalt($toUserSalt,
-                    self::TARGET_DERIVE_SUBJECT . $message->getId());
-                $encryptionKeyMessage = $this->deriveCipherKeyFromSalt($toUserSalt,
-                    self::TARGET_DERIVE_MESSAGE . $message->getId());
+                $encryptionKeySubject = KeyFactory::deriveEncryptionKey(base64_decode($toUserSalt) . 'subject' . $message->getId(),
+                    base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
 
-                $authenticationKey = $this->deriveAuthenticationKeyFromSalt($fromUser->getSalt());
+                $encryptionKeyMessage = KeyFactory::deriveEncryptionKey(base64_decode($toUserSalt) . 'message' . $message->getId(),
+                    base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
 
-                $plainSubject = $this->haliteService->decrypt($message->getSubject(),
-                    $encryptionKeySubject);
+                $plainSubject = Crypto::decrypt(base64_decode($message->getSubject()), $encryptionKeySubject, true);
 
-                $messageAuthenticated = $this->haliteService->verify($message->getMessage(), $authenticationKey,
-                    $message->getMac());
-
-                $plainMessage = '';
-
-                if ($messageAuthenticated) {
-                    $plainMessage = $this->haliteService->decrypt($message->getMessage(), $encryptionKeyMessage);
-                }
+                $plainMessage = Crypto::decrypt(base64_decode($message->getMessage()), $encryptionKeyMessage, true);
 
                 return [
                     'id' => $message->getId(),
                     'subject' => $plainSubject,
                     'message' => $plainMessage,
                     'name' => $fromUser->getName(),
-                    'authenticated' => $messageAuthenticated,
                 ];
 
             }
         }
 
         throw new \InvalidArgumentException('Message not found');
-    }
-
-    /**
-     * @param $salt
-     * @return AuthenticationKey
-     */
-    protected function deriveAuthenticationKeyFromSalt($salt)
-    {
-        return $this->haliteService->deriveAuthenticationKey(base64_decode($salt));
     }
 
     /**
@@ -237,7 +168,6 @@ class Message
                  * Retrieve the salts for both the sender and the recipient
                  */
                 $toUserSalt = $toUserModel->getSalt();
-                $fromUserSalt = $fromUserModel->getSalt();
 
                 /*
                  * create encryption keys concatenating user's salt, a string representing the target field to be
@@ -256,17 +186,7 @@ class Message
                 $cipherSubject = Crypto::encrypt($subject, $encryptionKeySubject, true);
                 $cipherMessage = Crypto::encrypt($message, $encryptionKeyMessage, true);
 
-                /*
-                 * create an authentication key based on the sender's salt and the system wide salt.
-                 */
-                $authenticationKey = KeyFactory::deriveAuthenticationKey(
-                    base64_decode($fromUserSalt), base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
-
-                $mac = Crypto::authenticate($cipherMessage, $authenticationKey, true);
-
-                $messageModel->setSubject(base64_encode($cipherSubject))
-                    ->setMessage(base64_encode($cipherMessage))
-                    ->setMac(base64_encode($mac));
+                $messageModel->setSubject(base64_encode($cipherSubject))->setMessage(base64_encode($cipherMessage));
 
                 $this->em->persist($messageModel);
                 $this->em->flush();
