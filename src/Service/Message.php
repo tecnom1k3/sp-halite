@@ -151,50 +151,50 @@ class Message
          * search for the sender and recipient users
          */
         /** @var UserModel $fromUserModel */
-        if (($fromUserModel = $userRepository->find($from)) == true) {
-            /** @var UserModel $toUserModel */
-            if (($toUserModel = $userRepository->find($to)) == true) {
+        $fromUserModel = $userRepository->find($from);
 
-                /*
-                 * create a placeholder for data, in order to generate a message id, used later to encrypt data.
-                 */
-                $messageModel->setFromUser($fromUserModel)
-                    ->setToUser($toUserModel);
+        /** @var UserModel $toUserModel */
+        $toUserModel = $userRepository->find($to);
 
-                $this->em->persist($messageModel);
-                $this->em->flush();
-
-                /*
-                 * Retrieve the salts for both the sender and the recipient
-                 */
-                $toUserSalt = $toUserModel->getSalt();
-
-                /*
-                 * create encryption keys concatenating user's salt, a string representing the target field to be
-                 * encrypted, the message unique id, and a system wide salt.
-                 */
-                $encryptionKeySubject = KeyFactory::deriveEncryptionKey(
-                    base64_decode($toUserSalt) . 'subject' . $messageModel->getId(),
-                    base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
-                $encryptionKeyMessage = KeyFactory::deriveEncryptionKey(
-                    base64_decode($toUserSalt) . 'message' . $messageModel->getId(),
-                    base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
-
-                /*
-                 * encrypt the subject and the message, each with their own encryption key
-                 */
-                $cipherSubject = Crypto::encrypt($subject, $encryptionKeySubject, true);
-                $cipherMessage = Crypto::encrypt($message, $encryptionKeyMessage, true);
-
-                $messageModel->setSubject(base64_encode($cipherSubject))->setMessage(base64_encode($cipherMessage));
-
-                $this->em->persist($messageModel);
-                $this->em->flush();
-
-                return $messageModel->getId();
-            }
+        if (!$fromUserModel || !$toUserModel) {
+            throw new \InvalidArgumentException('From or to user does not exist');
         }
 
-        throw new \InvalidArgumentException('From or to user does not exist');
+        /*
+         * create a placeholder for data, in order to generate a message id, used later to encrypt data.
+         */
+        $messageModel->setFromUser($fromUserModel)->setToUser($toUserModel);
+
+        $this->em->persist($messageModel);
+        $this->em->flush();
+
+        /*
+         * Retrieve the salts for both the sender and the recipient
+         */
+        $toUserSalt = $toUserModel->getSalt();
+
+        /*
+         * create encryption keys concatenating user's salt, a string representing the target field to be
+         * encrypted, the message unique id, and a system wide salt.
+         */
+        $encryptionKeySubject = KeyFactory::deriveEncryptionKey(
+            base64_decode($toUserSalt) . 'subject' . $messageModel->getId(),
+            base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
+        $encryptionKeyMessage = KeyFactory::deriveEncryptionKey(
+            base64_decode($toUserSalt) . 'message' . $messageModel->getId(),
+            base64_decode(getenv('HALITE_ENCRYPTION_KEY_SALT')));
+
+        /*
+         * encrypt the subject and the message, each with their own encryption key
+         */
+        $cipherSubject = Crypto::encrypt($subject, $encryptionKeySubject, true);
+        $cipherMessage = Crypto::encrypt($message, $encryptionKeyMessage, true);
+
+        $messageModel->setSubject(base64_encode($cipherSubject))->setMessage(base64_encode($cipherMessage));
+
+        $this->em->persist($messageModel);
+        $this->em->flush();
+
+        return $messageModel->getId();
     }
 }
